@@ -1,0 +1,46 @@
+--Listar todos os clientes que fizeram pedidos:
+SELECT nm_cliente
+FROM cliente
+WHERE idcliente IN (SELECT idcliente FROM comanda);
+
+
+--Calcular o total pago em cada comanda:
+SELECT idcomanda,
+       (SELECT SUM(valor_pago) FROM pagamento WHERE idcomanda = c.idcomanda) AS total_pago
+FROM comanda c;
+
+
+-- Listar os nomes dos funcionários e a quantidade de pedidos que eles atenderam:
+SELECT nome, 
+       (SELECT COUNT(idpedido) FROM pedidos WHERE idcomanda IN (SELECT idcomanda FROM comanda WHERE idfuncionario = f.idfuncionario)) AS total_pedidos_atendidos
+FROM funcionario f;
+
+
+--Encontrar o item de cardápio mais popular (com maior quantidade pedida):
+SELECT nome
+FROM cardapio_itens
+WHERE idcardapio = (SELECT TOP 1 idcardapio FROM pedidos GROUP BY idcardapio ORDER BY COUNT(idpedido) DESC);
+
+
+--Listar os nomes dos clientes que não fizeram nenhum pedido:
+SELECT nm_cliente
+FROM cliente
+WHERE idcliente NOT IN (SELECT idcliente FROM comanda);
+
+
+--Calcular a média de valor pago por comanda:
+SELECT AVG(total_pago) AS media_valor_pago
+FROM (SELECT idcomanda, ISNULL(SUM(valor_pago), 0) AS total_pago FROM pagamento GROUP BY idcomanda) AS comandas_totais;
+
+
+--Listar os funcionários que não atenderam nenhum pedido:
+SELECT nome
+FROM funcionario f
+WHERE f.idfuncionario NOT IN (SELECT DISTINCT idfuncionario FROM pedidos);
+
+
+--Encontrar o item de cardápio menos popular (com menor quantidade pedida):
+SELECT nome
+FROM cardapio_itens
+WHERE idcardapio = (SELECT TOP 1 idcardapio FROM pedidos GROUP BY idcardapio ORDER BY COUNT(idpedido) ASC) OR
+      NOT EXISTS (SELECT 1 FROM pedidos);
